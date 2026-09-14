@@ -47,6 +47,9 @@
             {% if can_manage %}
             <a class="table-link" href="{{ url_for('module_edit', module=module_key, record_id=row.id) }}">Edit</a>
             {% endif %}
+            {% if module_key == "outgoing_letters" %}
+            <a class="table-link" href="{{ url_for('outgoing_letter_download', record_id=row.id) }}">Download DOCX</a>
+            {% endif %}
             {% if can_manage and module_key in ["contracts", "permits", "incoming_letters", "outgoing_letters", "tasks", "meetings", "vendors", "assets"] %}
             <a class="table-link" href="{{ url_for('document_upload', related_type=module_key.upper().rstrip('S') if module_key not in ['incoming_letters', 'outgoing_letters'] else ('INCOMING_LETTER' if module_key == 'incoming_letters' else 'OUTGOING_LETTER'), related_id=row.id) }}">Add Document</a>
             {% endif %}

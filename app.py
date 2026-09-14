@@ -27,6 +27,9 @@ from flask import (
     session,
     url_for,
 )
+from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Inches, Pt
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from services.document_processing import (
@@ -909,6 +912,7 @@ MODULES = {
             {"name": "priority", "label": "Priority", "type": "select", "options": ["Low", "Medium", "High"], "required": True},
             {"name": "template_name", "label": "Template", "type": "text"},
             {"name": "signer", "label": "Signer", "type": "text"},
+            {"name": "body", "label": "Isi Surat", "type": "textarea", "help_text": "Isi surat yang akan dimasukkan ke file DOCX siap cetak."},
             {"name": "summary", "label": "Summary", "type": "textarea"},
             {"name": "follow_up", "label": "Follow Up", "type": "textarea"},
         ],
@@ -2005,6 +2009,23 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         ensure_permission(config["permission_view"])
         return render_template("module_list.html", title=config["title"], module_key=module, config=config, rows=get_accessible_rows(module, g.current_user), can_manage=user_has_permission(g.current_user, config["permission_manage"]) and can_manage_any_org(g.current_user))
 
+    @app.route("/modules/outgoing_letters/<int:record_id>/download")
+    @login_required
+    @permission_required("outgoing_letters.view")
+    def outgoing_letter_download(record_id: int):
+        row = get_module_record("outgoing_letters", record_id)
+        if not row:
+            abort(404)
+        ensure_record_access("outgoing_letters", row, g.current_user)
+        document = build_outgoing_letter_docx(row)
+        filename = f"surat-keluar-{sanitize_filename(row['letter_number'])}.docx"
+        return send_file(
+            document,
+            as_attachment=True,
+            download_name=filename,
+            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+
     @app.route("/modules/<module>/new", methods=["GET", "POST"])
     @login_required
     def module_create(module: str):
@@ -2579,6 +2600,71 @@ def save_module(module: str, record_id: int | None, form_data, user: dict[str, A
     created_id = execute(f"INSERT INTO {config['table']} ({columns}) VALUES ({placeholders})", tuple(values.values()), True)
     log_action("CREATE", module, str(created_id), organization_id, f"{config['singular']} dibuat.")
     return int(created_id or 0)
+
+
+def build_outgoing_letter_docx(row: dict[str, Any]) -> io.BytesIO:
+    document = Document()
+    section = document.sections[0]
+    section.top_margin = Inches(0.7)
+    section.bottom_margin = Inches(0.7)
+    section.left_margin = Inches(0.9)
+    section.right_margin = Inches(0.9)
+
+    normal_style = document.styles["Normal"]
+    normal_style.font.name = "Arial"
+    normal_style.font.size = Pt(11)
+
+    company = get_company_settings()
+    header = document.add_paragraph()
+    header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    header_run = header.add_run(company.get("company_name") or row.get("organization_name") or "NAMA ORGANISASI")
+    header_run.bold = True
+    header_run.font.size = Pt(14)
+    address = company.get("address")
+    if address:
+        address_run = header.add_run(f"\n{address}")
+        address_run.font.size = Pt(9)
+    document.add_paragraph("_" * 96)
+
+    metadata = document.add_table(rows=4, cols=2)
+    metadata.style = "Table Grid"
+    metadata_data = [
+        ("Nomor", row.get("letter_number") or "-"),
+        ("Lampiran", "-"),
+        ("Perihal", row.get("subject") or "-"),
+        ("Tanggal", format_date(row.get("letter_date")) if row.get("letter_date") else "-"),
+    ]
+    for table_row, (label, value) in zip(metadata.rows, metadata_data):
+        table_row.cells[0].text = label
+        table_row.cells[1].text = value
+        table_row.cells[0].paragraphs[0].runs[0].bold = True
+
+    document.add_paragraph()
+    recipient = document.add_paragraph()
+    recipient.add_run("Yth. ").bold = True
+    recipient.add_run(row.get("correspondent") or "Penerima surat")
+    recipient.add_run("\ndi tempat")
+    document.add_paragraph()
+
+    body = row.get("body") or row.get("summary") or "Isi surat belum diisi. Silakan edit surat dan lengkapi bagian Isi Surat."
+    for paragraph_text in str(body).splitlines() or [""]:
+        paragraph = document.add_paragraph(paragraph_text)
+        paragraph.paragraph_format.space_after = Pt(8)
+
+    document.add_paragraph()
+    closing = document.add_paragraph("Demikian surat ini disampaikan untuk dapat dipergunakan sebagaimana mestinya.")
+    closing.paragraph_format.space_after = Pt(18)
+    signature = document.add_paragraph()
+    signature.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    signature.add_run("Hormat kami,\n\n\n\n")
+    signer = signature.add_run(row.get("signer") or "________________________")
+    signer.bold = True
+    document.add_paragraph("\nCatatan: Dokumen ini disiapkan untuk dicetak, ditandatangani, distempel, dan diberi materai bila diperlukan.").italic = True
+
+    output = io.BytesIO()
+    document.save(output)
+    output.seek(0)
+    return output
 
 
 def stamp_common_values(module: str, values: dict[str, Any], existing: dict[str, Any] | None, user: dict[str, Any]) -> None:

@@ -6,7 +6,7 @@
     <title>{{ app_name }}{% if title %} | {{ title }}{% endif %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   </head>
-  <body class="app-shell">
+  <body class="app-shell{% if not current_user %} auth-shell{% endif %}">
     {% if current_user %}
     <aside class="sidebar">
       <div class="brand-block">

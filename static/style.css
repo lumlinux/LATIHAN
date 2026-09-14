@@ -44,6 +44,10 @@ code {
   grid-template-columns: 290px 1fr;
 }
 
+.auth-shell {
+  display: block;
+}
+
 .sidebar {
   padding: 28px 22px;
   background: linear-gradient(180deg, rgba(18, 61, 82, 0.96), rgba(15, 41, 56, 0.96));
@@ -119,7 +123,10 @@ code {
 
 .auth-main {
   display: grid;
-  place-items: center;
+  min-height: 100vh;
+  align-content: center;
+  justify-items: center;
+  padding: clamp(20px, 5vw, 56px);
 }
 
 .topbar,
@@ -310,6 +317,7 @@ button:hover {
 
 .auth-panel {
   width: min(1100px, 100%);
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 24px;
@@ -647,6 +655,16 @@ textarea {
 @media (max-width: 760px) {
   .main-shell {
     padding: 18px;
+  }
+
+  .auth-main {
+    min-height: 100svh;
+    padding: 18px;
+  }
+
+  .auth-copy,
+  .auth-form {
+    padding: 24px;
   }
 
   .form-grid {
