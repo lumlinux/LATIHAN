@@ -1,0 +1,14 @@
+.venv/
+.venv-*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+tests/.tmp/
+
+# Local application data and uploaded documents
+data/
+
+# Local environment and editor files
+.env
+.vscode/
+*.log

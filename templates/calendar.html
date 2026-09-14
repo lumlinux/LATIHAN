@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% set title = "Calendar" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Schedule</span>
+    <h2>30-Day Calendar</h2>
+    <p>Kalender gabungan untuk agenda dan meeting yang dapat Anda akses.</p>
+  </div>
+</section>
+
+<section class="calendar-layout">
+  <div class="calendar-grid">
+    {% for day in days %}
+    <article class="calendar-day">
+      <div class="calendar-day-head">
+        <strong>{{ day.date.strftime("%d") }}</strong>
+        <span>{{ day.date.strftime("%b %Y") }}</span>
+      </div>
+      <div class="calendar-counter">{{ day.count }} item</div>
+      <div class="calendar-items">
+        {% for entry in day.entries[:3] %}
+        <div class="calendar-chip">{{ entry.time }} • {{ entry.kind }} • {{ entry.label|truncate_text(30) }}</div>
+        {% else %}
+        <span class="muted-mini">No schedule</span>
+        {% endfor %}
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  <aside class="panel-card timeline-card">
+    <div class="panel-head">
+      <h3>Upcoming Timeline</h3>
+    </div>
+    <div class="list-stack">
+      {% for item in timeline %}
+      <div class="list-item">
+        <strong>{{ item.title }}</strong>
+        <span>{{ item.kind }} • {{ item.when|datetime_label }} • {{ item.location or 'Lokasi belum diisi' }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada jadwal.</p>
+      {% endfor %}
+    </div>
+  </aside>
+</section>
+{% endblock %}

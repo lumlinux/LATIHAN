@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% set title = "AI Assistant" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Assistant</span>
+    <h2>Digital Secretary Assistant</h2>
+    <p>Assistant offline untuk merangkum pekerjaan berdasarkan data aplikasi saat ini.</p>
+  </div>
+</section>
+
+<section class="assistant-layout">
+  <form method="post" class="panel-card assistant-form">
+    <label class="form-field form-field-wide">
+      <span>Apa yang ingin Anda ringkas?</span>
+      <textarea name="prompt" required placeholder="Contoh: ringkas task saya hari ini, tampilkan rapat terdekat, status surat, atau disposisi aktif.">{{ prompt }}</textarea>
+    </label>
+    <div class="form-actions">
+      <button type="submit" class="primary-button">Analisis</button>
+    </div>
+  </form>
+
+  <article class="panel-card assistant-result">
+    <h3>Hasil Ringkasan</h3>
+    {% if answer %}
+    <pre>{{ answer }}</pre>
+    {% else %}
+    <p class="empty-state">Belum ada hasil. Kirim pertanyaan untuk mendapatkan ringkasan kerja.</p>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Master Data</span>
+    <h2>{{ title }}</h2>
+    <p>Atur kode kategori, format nomor surat, sequence awal, dan kebijakan reset nomor.</p>
+  </div>
+  <a class="ghost-button" href="{{ url_for('letter_categories_page') }}">Kembali</a>
+</section>
+
+<form method="post" class="panel-card form-grid">
+  <label class="form-field">
+    <span>Kode Kategori</span>
+    <input type="text" name="code" value="{{ row.code if row else '' }}" required />
+  </label>
+  <label class="form-field">
+    <span>Nama Kategori</span>
+    <input type="text" name="name" value="{{ row.name if row else '' }}" required />
+  </label>
+  <label class="form-field form-field-wide">
+    <span>Format Nomor</span>
+    <input type="text" name="number_format" value="{{ row.number_format if row else '{NOMOR}/{KATEGORI}/{KODE_PERUSAHAAN}/{BULAN_ROMAWI}/{TAHUN}' }}" required />
+    <small class="muted-mini">Token: `{NOMOR}`, `{KATEGORI}`, `{KODE_PERUSAHAAN}`, `{BULAN_ROMAWI}`, `{BULAN}`, `{TAHUN}`</small>
+  </label>
+  <label class="form-field">
+    <span>Nomor Awal</span>
+    <input type="number" min="1" name="start_number" value="{{ row.start_number if row else 1 }}" required />
+  </label>
+  <label class="form-field">
+    <span>Reset Nomor</span>
+    <select name="reset_policy" required>
+      {% for item in ["YEARLY", "MONTHLY", "NEVER"] %}
+      <option value="{{ item }}" {% if (row.reset_policy if row else 'YEARLY') == item %}selected{% endif %}>{{ item }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label class="toggle-field">
+    <input type="checkbox" name="is_active" {% if not row or row.is_active %}checked{% endif %} />
+    <span>Kategori aktif</span>
+  </label>
+  <label class="form-field form-field-wide">
+    <span>Keterangan</span>
+    <textarea name="description">{{ row.description if row else '' }}</textarea>
+  </label>
+  <div class="form-actions">
+    <button type="submit" class="primary-button">Simpan</button>
+    <a class="ghost-button" href="{{ url_for('letter_categories_page') }}">Batal</a>
+  </div>
+</form>
+{% endblock %}

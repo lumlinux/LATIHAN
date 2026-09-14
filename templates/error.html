@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="panel-card error-card">
+  <span class="eyebrow">System Message</span>
+  <h2>{{ title }}</h2>
+  <p>{{ message }}</p>
+  {% if current_user %}
+  <a class="primary-button" href="{{ url_for('dashboard') }}">Kembali ke dashboard</a>
+  {% else %}
+  <a class="primary-button" href="{{ url_for('login') }}">Kembali ke login</a>
+  {% endif %}
+</section>
+{% endblock %}

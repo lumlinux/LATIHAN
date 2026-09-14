@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% set title = "Login" %}
+{% block content %}
+<section class="auth-panel">
+  <div class="auth-copy">
+    <span class="eyebrow">Operational Control</span>
+    <h2>AI SECRETARY</h2>
+    <p>Kelola administrasi PT dan dua rumah sakit dalam satu platform dengan kontrol organisasi, tembusan pusat, dan monitoring compliance.</p>
+    <div class="credential-box">
+      <strong>Default Accounts</strong>
+      <p><code>owner / owner123</code></p>
+      <p><code>sekretaris.pt / secretpt123</code></p>
+      <p><code>sekretaris.cikarang / cikarang123</code></p>
+      <p><code>sekretaris.purwakarta / purwakarta123</code></p>
+      <p><code>admin.it / adminit123</code></p>
+      <p><code>admin / admin123</code></p>
+    </div>
+  </div>
+
+  <form method="post" class="auth-form">
+    <h3>Sign In</h3>
+    <label>
+      <span>Username</span>
+      <input type="text" name="username" required />
+    </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" required />
+    </label>
+    <button type="submit" class="primary-button wide">Masuk ke aplikasi</button>
+  </form>
+</section>
+{% endblock %}

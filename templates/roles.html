@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% set title = "Role & Permission" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Administration</span>
+    <h2>Role & Permission</h2>
+    <p>Mengelola struktur akses berdasarkan kebutuhan organisasi.</p>
+  </div>
+  <a class="primary-button" href="{{ url_for('role_create') }}">Tambah Role</a>
+</section>
+
+<section class="card-grid card-grid-panels">
+  {% for role in roles %}
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>{{ role.name }}</h3>
+      <a href="{{ url_for('role_edit', role_id=role.id) }}">Edit</a>
+    </div>
+    <p class="panel-copy">{{ role.description }}</p>
+    <div class="tag-wrap">
+      {% for permission in permissions %}
+        {% if permission.code in permission_map[role.id] %}
+        <span class="tag">{{ permission.code }}</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

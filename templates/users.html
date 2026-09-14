@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% set title = "User Management" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Administration</span>
+    <h2>User Management</h2>
+    <p>Kelola akun, role, status, dan penempatan organization pengguna aplikasi.</p>
+  </div>
+  <a class="primary-button" href="{{ url_for('user_create') }}">Tambah User</a>
+</section>
+
+<section class="panel-card">
+  <form method="get" class="inline-filter">
+    <input type="text" name="q" value="{{ query_text }}" placeholder="Cari nama, username, email, unit..." />
+    <select name="status">
+      <option value="">Semua status</option>
+      <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+      <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+    </select>
+    <button type="submit" class="ghost-button">Filter</button>
+  </form>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Organization</th>
+          <th>Full Name</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Unit</th>
+          <th>Position</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Last Login</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in users %}
+        <tr>
+          <td>{{ row.organization_name or '-' }}</td>
+          <td>{{ row.full_name }}</td>
+          <td>{{ row.username }}</td>
+          <td>{{ row.email }}</td>
+          <td>{{ row.department or '-' }}</td>
+          <td>{{ row.position or '-' }}</td>
+          <td>{{ row.role_name }}</td>
+          <td>{{ "Active" if row.is_active else "Inactive" }}{% if row.must_change_password %} | Must change password{% endif %}</td>
+          <td>{{ row.last_login_at|datetime_label }}</td>
+          <td class="table-actions">
+            <a class="table-link" href="{{ url_for('user_edit', user_id=row.id) }}">Edit</a>
+            <a class="table-link" href="{{ url_for('user_reset_password', user_id=row.id) }}">Reset Password</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="10" class="table-empty">Belum ada user.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

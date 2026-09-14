@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ app_name }}{% if title %} | {{ title }}{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body class="app-shell">
+    {% if current_user %}
+    <aside class="sidebar">
+      <div class="brand-block">
+        <span class="eyebrow">Digital Workspace</span>
+        <h1>{{ app_name }}</h1>
+        <p>Executive administration hub</p>
+      </div>
+      <nav class="sidebar-nav">
+        {% for item in nav_items %}
+        <a href="{{ item.url }}" class="nav-link {% if request.path == item.url %}active{% endif %}">{{ item.label }}</a>
+        {% endfor %}
+      </nav>
+    </aside>
+    {% endif %}
+
+    <main class="main-shell {% if not current_user %}auth-main{% endif %}">
+      {% if current_user %}
+      <header class="topbar">
+        <div>
+          <span class="eyebrow">Signed in as</span>
+          <h2>{{ current_user.full_name }}</h2>
+          <p>{{ current_user.role_name }}{% if current_user.organization_name %} | {{ current_user.organization_name }}{% endif %}</p>
+        </div>
+        <div class="topbar-actions">
+          <a class="ghost-button" href="{{ url_for('assistant_page') if has_permission('assistant.use') else url_for('dashboard') }}">Quick Assist</a>
+          <a class="ghost-button" href="{{ url_for('change_password') }}">Change Password</a>
+          <a class="primary-button" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+      {% endif %}
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <section class="flash-stack">
+          {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </section>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

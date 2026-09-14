@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set title = "Global Search" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Discovery</span>
+    <h2>Global Search</h2>
+    <p>Cari dokumen, kontrak, permit, vendor, asset, task, meeting, atau surat dari seluruh data yang dapat Anda akses.</p>
+  </div>
+</section>
+
+<form method="get" class="panel-card search-form">
+  <label class="form-field form-field-wide">
+    <span>Kata kunci</span>
+    <input type="text" name="q" value="{{ query_text }}" placeholder="Contoh: CT Scan, Vendor Medika, izin operasional, kontrak laundry" />
+  </label>
+  <div class="form-actions">
+    <button type="submit" class="primary-button">Cari</button>
+  </div>
+</form>
+
+<section class="panel-card">
+  <div class="list-stack">
+    {% for row in results %}
+    <a href="{{ row.url }}" class="list-item">
+      <strong>{{ row.title }}</strong>
+      <span>{{ row.module }} | {{ row.organization_name }}</span>
+      <span>{{ row.subtitle|truncate_text(150) }}</span>
+    </a>
+    {% else %}
+    <p class="empty-state">{% if query_text %}Tidak ada hasil untuk kata kunci tersebut.{% else %}Masukkan kata kunci untuk mulai mencari.{% endif %}</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

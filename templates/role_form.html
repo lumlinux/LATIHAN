@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Administration</span>
+    <h2>{{ title }}</h2>
+    <p>Tentukan permission yang dimiliki role ini.</p>
+  </div>
+  <a class="ghost-button" href="{{ url_for('roles_page') }}">Kembali</a>
+</section>
+
+<form method="post" class="panel-card form-grid">
+  <label class="form-field">
+    <span>Role Name</span>
+    <input type="text" name="name" value="{{ role_row.name if role_row else '' }}" required />
+  </label>
+  <label class="form-field form-field-wide">
+    <span>Description</span>
+    <textarea name="description" required>{{ role_row.description if role_row else '' }}</textarea>
+  </label>
+  <div class="form-field-wide">
+    <span class="field-label">Permissions</span>
+    <div class="check-grid">
+      {% for permission in permissions %}
+      <label class="check-item">
+        <input type="checkbox" name="permissions" value="{{ permission.code }}" {% if permission.code in selected_permissions %}checked{% endif %} />
+        <span>
+          <strong>{{ permission.code }}</strong>
+          <small>{{ permission.description }}</small>
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="form-actions">
+    <button type="submit" class="primary-button">Simpan</button>
+    <a class="ghost-button" href="{{ url_for('roles_page') }}">Batal</a>
+  </div>
+</form>
+{% endblock %}

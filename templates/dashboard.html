@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% set title = "Dashboard" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Overview</span>
+    <h2>Dashboard</h2>
+    <p>Ringkasan aktivitas administrasi, tembusan pusat, dan monitoring compliance lintas organisasi.</p>
+  </div>
+  {% if filter_options|length > 1 %}
+  <form method="get" class="inline-filter">
+    <select name="organization">
+      <option value="">Semua Organization</option>
+      {% for option in filter_options %}
+      <option value="{{ option.id }}" {% if organization_filter == option.id|string %}selected{% endif %}>{{ option.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="ghost-button">Filter</button>
+  </form>
+  {% endif %}
+</section>
+
+<section class="card-grid card-grid-metrics">
+  {% for card in report_cards %}
+  <article class="metric-card accent-{{ card.accent }}">
+    <span>{{ card.label }}</span>
+    <strong>{{ card.value }}</strong>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="card-grid card-grid-panels">
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Open Tasks</h3>
+      {% if has_permission('tasks.view') %}<a href="{{ url_for('module_list', module='tasks') }}">See all</a>{% endif %}
+    </div>
+    <div class="list-stack">
+      {% for row in open_tasks %}
+      <div class="list-item">
+        <strong>{{ row.title }}</strong>
+        <span>{{ row.organization_name }} | {{ row.status }} | {{ row.priority }} | {{ row.due_date|datetime_label }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada task terbuka.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Due Reminders</h3>
+      {% if has_permission('reminders.view') %}<a href="{{ url_for('module_list', module='reminders') }}">See all</a>{% endif %}
+    </div>
+    <div class="list-stack">
+      {% for row in due_reminders %}
+      <div class="list-item">
+        <strong>{{ row.title }}</strong>
+        <span>{{ row.organization_name }} | {{ row.remind_at|datetime_label }} | {{ row.user_name }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Tidak ada reminder aktif.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Pending Letters</h3>
+      {% if has_permission('incoming_letters.view') %}<a href="{{ url_for('module_list', module='incoming_letters') }}">Incoming</a>{% endif %}
+    </div>
+    <div class="list-stack">
+      {% for row in pending_letters %}
+      <div class="list-item">
+        <strong>{{ row.letter_number }}</strong>
+        <span>{{ row.organization_name }} | {{ row.subject }} | {{ row.status }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Tidak ada surat yang tertunda.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Upcoming Meetings</h3>
+      {% if has_permission('meetings.view') %}<a href="{{ url_for('module_list', module='meetings') }}">See all</a>{% endif %}
+    </div>
+    <div class="list-stack">
+      {% for row in next_meetings %}
+      <div class="list-item">
+        <strong>{{ row.title }}</strong>
+        <span>{{ row.organization_name }} | {{ row.start_at|datetime_label }} | {{ row.location or 'Lokasi belum diisi' }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada rapat terjadwal.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Dispositions</h3>
+      {% if has_permission('dispositions.view') %}<a href="{{ url_for('module_list', module='dispositions') }}">See all</a>{% endif %}
+    </div>
+    <div class="list-stack">
+      {% for row in dispositions %}
+      <div class="list-item">
+        <strong>{{ row.letter_number or '-' }}</strong>
+        <span>{{ row.organization_name }} | {{ row.status }} | due {{ row.due_date|date_label }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada disposisi.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Notifications</h3>
+      {% if has_permission('notifications.view') %}<a href="{{ url_for('notifications_page') }}">Inbox</a>{% endif %}
+    </div>
+    <div class="list-stack">
+      {% for row in notifications %}
+      <div class="list-item">
+        <strong>{{ row.title }}</strong>
+        <span>{{ row.message|truncate_text(90) }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada notifikasi.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Compliance Alerts</h3>
+      {% if has_permission('compliance.view') %}<a href="{{ url_for('compliance_page') }}">Open</a>{% endif %}
+    </div>
+    <div class="list-stack">
+      {% for row in compliance_alerts %}
+      <div class="list-item">
+        <strong>{{ row.label }}</strong>
+        <span>{{ row.module }} | {{ row.organization_name }} | {{ row.expiry_date }} | {{ row.urgency }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Tidak ada alert compliance.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Overdue Tasks</h3>
+      {% if has_permission('tasks.view') %}<a href="{{ url_for('module_list', module='tasks') }}">Task list</a>{% endif %}
+    </div>
+    <div class="list-stack">
+      {% for row in overdue_tasks %}
+      <div class="list-item">
+        <strong>{{ row.title }}</strong>
+        <span>{{ row.organization_name }} | deadline {{ row.due_date|datetime_label }} | {{ row.priority }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Tidak ada task overdue.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

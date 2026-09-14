@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Form</span>
+    <h2>{{ title }}</h2>
+    <p>Lengkapi informasi berikut untuk menyimpan data.</p>
+  </div>
+  <a class="ghost-button" href="{{ url_for('module_list', module=module_key) }}">Kembali</a>
+</section>
+
+<form method="post" class="panel-card form-grid">
+  {% for field in fields %}
+  <label class="form-field {% if field.type == 'textarea' %}form-field-wide{% endif %}">
+    <span>{{ field.label }}</span>
+    {% if field.type == 'textarea' %}
+    <textarea name="{{ field.name }}" {% if field.required %}required{% endif %} {% if field.readonly %}readonly{% endif %}>{{ field.value }}</textarea>
+    {% elif field.type == 'select' %}
+    <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
+      <option value="">Pilih</option>
+      {% for option in field.options %}
+      <option value="{{ option.value }}" {% if field.value == option.value|string %}selected{% endif %}>{{ option.label }}</option>
+      {% endfor %}
+    </select>
+    {% else %}
+    <input type="{{ field.type }}" name="{{ field.name }}" value="{{ field.value }}" {% if field.required %}required{% endif %} {% if field.readonly %}readonly{% endif %} />
+    {% endif %}
+    {% if field.help_text %}
+    <small class="muted-mini">{{ field.help_text }}</small>
+    {% endif %}
+  </label>
+  {% endfor %}
+  <div class="form-actions">
+    <button type="submit" class="primary-button">Simpan</button>
+    <a class="ghost-button" href="{{ url_for('module_list', module=module_key) }}">Batal</a>
+  </div>
+</form>
+{% endblock %}

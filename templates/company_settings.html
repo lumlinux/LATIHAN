@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% set title = "Company Settings" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Settings</span>
+    <h2>Pengaturan Perusahaan</h2>
+    <p>Kelola identitas perusahaan, format nomor surat, logo, dan policy password dari satu halaman.</p>
+  </div>
+  <a class="ghost-button" href="{{ url_for('settings_page') }}">Kembali</a>
+</section>
+
+<form method="post" enctype="multipart/form-data" class="panel-card form-grid">
+  <label class="form-field">
+    <span>Nama Perusahaan</span>
+    <input type="text" name="company_name" value="{{ company.company_name or '' }}" required />
+  </label>
+  <label class="form-field">
+    <span>Nama Singkat</span>
+    <input type="text" name="short_name" value="{{ company.short_name or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>Kode Perusahaan</span>
+    <input type="text" name="company_code" value="{{ company.company_code or '' }}" required />
+  </label>
+  <label class="form-field">
+    <span>Telepon</span>
+    <input type="text" name="phone" value="{{ company.phone or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>Email</span>
+    <input type="email" name="email" value="{{ company.email or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>Website</span>
+    <input type="text" name="website" value="{{ company.website or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>Kota</span>
+    <input type="text" name="city" value="{{ company.city or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>Provinsi</span>
+    <input type="text" name="province" value="{{ company.province or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>Kode Pos</span>
+    <input type="text" name="postal_code" value="{{ company.postal_code or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>NPWP</span>
+    <input type="text" name="tax_number" value="{{ company.tax_number or '' }}" />
+  </label>
+  <label class="form-field form-field-wide">
+    <span>Alamat</span>
+    <textarea name="address">{{ company.address or '' }}</textarea>
+  </label>
+
+  <div class="form-field form-field-wide">
+    <span>Logo Perusahaan</span>
+    <div class="list-item">
+      {% if company.logo_storage_path %}
+      <strong>Logo aktif tersedia</strong>
+      <div class="topbar-actions">
+        <a class="table-link" href="{{ url_for('company_logo_preview') }}" target="_blank">Preview Logo</a>
+        <form method="post" action="{{ url_for('company_logo_delete') }}">
+          <button type="submit" class="ghost-button">Hapus Logo</button>
+        </form>
+      </div>
+      {% else %}
+      <strong>Belum ada logo perusahaan</strong>
+      {% endif %}
+    </div>
+    <input type="file" name="logo_file" accept=".png,.jpg,.jpeg" />
+  </div>
+
+  <label class="form-field form-field-wide">
+    <span>Format Nomor Surat</span>
+    <input type="text" name="letter_number_format" value="{{ company.letter_number_format or '{NOMOR}/{KATEGORI}/{KODE_PERUSAHAAN}/{BULAN_ROMAWI}/{TAHUN}' }}" required />
+  </label>
+  <label class="form-field">
+    <span>Prefix Surat</span>
+    <input type="text" name="letter_prefix" value="{{ company.letter_prefix or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>Format Tanggal</span>
+    <input type="text" name="date_format" value="{{ company.date_format or 'DD MMM YYYY' }}" />
+  </label>
+  <label class="form-field">
+    <span>Format Bulan</span>
+    <select name="month_format">
+      {% for item in ["ROMAN", "NUMERIC"] %}
+      <option value="{{ item }}" {% if (company.month_format or 'ROMAN') == item %}selected{% endif %}>{{ item }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label class="form-field">
+    <span>Tahun Aktif</span>
+    <input type="text" name="active_year" value="{{ company.active_year or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>Nomor Awal</span>
+    <input type="number" min="1" name="start_number" value="{{ company.start_number or 1 }}" />
+  </label>
+  <label class="form-field">
+    <span>Reset Nomor</span>
+    <select name="reset_policy">
+      {% for item in ["YEARLY", "MONTHLY", "NEVER"] %}
+      <option value="{{ item }}" {% if (company.reset_policy or 'YEARLY') == item %}selected{% endif %}>{{ item }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label class="toggle-field">
+    <input type="checkbox" name="use_organization_code_in_letters" {% if company.use_organization_code_in_letters %}checked{% endif %} />
+    <span>Gunakan kode organization sebagai token `{KODE_PERUSAHAAN}`</span>
+  </label>
+  <label class="form-field">
+    <span>Nama Pejabat</span>
+    <input type="text" name="official_name" value="{{ company.official_name or '' }}" />
+  </label>
+  <label class="form-field">
+    <span>Jabatan Pejabat</span>
+    <input type="text" name="official_position" value="{{ company.official_position or '' }}" />
+  </label>
+  <label class="form-field form-field-wide">
+    <span>Tanda Tangan</span>
+    <textarea name="official_signature">{{ company.official_signature or '' }}</textarea>
+  </label>
+
+  <label class="form-field">
+    <span>Password Min Length</span>
+    <input type="number" min="6" name="password_min_length" value="{{ company.password_min_length or 8 }}" />
+  </label>
+  <label class="form-field">
+    <span>Password Expiry (hari)</span>
+    <input type="number" min="0" name="password_expiry_days" value="{{ company.password_expiry_days or 90 }}" />
+  </label>
+  <div class="detail-item">
+    <span>Ringkasan Policy Password</span>
+    <strong>Min {{ company.password_min_length or 8 }} karakter | Expiry {{ company.password_expiry_days or 90 }} hari</strong>
+  </div>
+  <label class="toggle-field">
+    <input type="checkbox" name="password_require_uppercase" {% if company.password_require_uppercase %}checked{% endif %} />
+    <span>Wajib huruf besar</span>
+  </label>
+  <label class="toggle-field">
+    <input type="checkbox" name="password_require_lowercase" {% if company.password_require_lowercase %}checked{% endif %} />
+    <span>Wajib huruf kecil</span>
+  </label>
+  <label class="toggle-field">
+    <input type="checkbox" name="password_require_digit" {% if company.password_require_digit %}checked{% endif %} />
+    <span>Wajib angka</span>
+  </label>
+  <label class="toggle-field">
+    <input type="checkbox" name="password_require_special" {% if company.password_require_special %}checked{% endif %} />
+    <span>Wajib karakter khusus</span>
+  </label>
+
+  <div class="form-actions">
+    <button type="submit" class="primary-button">Simpan Pengaturan</button>
+    <a class="ghost-button" href="{{ url_for('settings_page') }}">Batal</a>
+  </div>
+</form>
+{% endblock %}

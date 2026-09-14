@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% set title = "Compliance" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Central Monitoring</span>
+    <h2>Compliance Dashboard</h2>
+    <p>Monitoring dokumen, kontrak, dan perizinan RS yang harus terpantau oleh PT/Kantor Pusat.</p>
+  </div>
+</section>
+
+<section class="panel-card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Organization</th>
+          <th>Documents</th>
+          <th>Tembusan Docs</th>
+          <th>Contracts</th>
+          <th>Tembusan Contracts</th>
+          <th>Permits</th>
+          <th>Tembusan Permits</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in summary_rows %}
+        <tr>
+          <td>{{ row.organization_name }}</td>
+          <td>{{ row.documents_total }}</td>
+          <td>{{ row.documents_tembusan }}</td>
+          <td>{{ row.contracts_total }}</td>
+          <td>{{ row.contracts_tembusan }}</td>
+          <td>{{ row.permits_total }}</td>
+          <td>{{ row.permits_tembusan }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="table-empty">Belum ada data compliance.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card-grid card-grid-panels">
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Pending Central Review</h3>
+    </div>
+    <div class="list-stack">
+      {% for row in pending_review %}
+      <div class="list-item">
+        <strong>{{ row.title }}</strong>
+        <span>{{ row.organization_name }} | {{ row.document_type }} | {{ row.central_status }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Tidak ada dokumen yang menunggu review pusat.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Expiring & Expired</h3>
+    </div>
+    <div class="list-stack">
+      {% for row in expiring_items %}
+      <div class="list-item">
+        <strong>{{ row.label }}</strong>
+        <span>{{ row.module }} | {{ row.organization_name }} | {{ row.expiry_date }} | {{ row.urgency }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada item expiry yang terdeteksi.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

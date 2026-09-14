@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% set title = "Settings" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Configuration</span>
+    <h2>Settings</h2>
+    <p>Ringkasan struktur organisasi dan konfigurasi sistem inti.</p>
+  </div>
+</section>
+
+<section class="card-grid card-grid-panels">
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Organizations</h3>
+    </div>
+    <div class="list-stack">
+      {% for row in organizations %}
+      <div class="list-item">
+        <strong>{{ row.name }}</strong>
+        <span>{{ row.code }} | {{ row.kind }} | Central: {{ "Yes" if row.is_central else "No" }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Reminder Schedule</h3>
+    </div>
+    <div class="tag-wrap">
+      {% for item in reminder_schedule %}
+      <span class="tag">{{ item }}</span>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Backup</h3>
+      <form method="post" action="{{ url_for('settings_backup_create') }}">
+        <button type="submit" class="primary-button">Create Backup</button>
+      </form>
+    </div>
+    <div class="list-stack">
+      {% for row in backup_rows %}
+      <div class="list-item">
+        <strong>{{ row.name }}</strong>
+        <span>{{ row.size_kb }} KB | {{ row.modified_at|datetime_label }}</span>
+        <div class="table-actions">
+          <a class="table-link" href="{{ url_for('settings_backup_download', archive_name=row.name) }}">Download</a>
+          <form method="post" action="{{ url_for('settings_backup_restore', archive_name=row.name) }}">
+            <button type="submit" class="ghost-button">Restore</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada backup arsip.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="card-grid card-grid-metrics">
+  <article class="metric-card accent-blue">
+    <span>Company Settings</span>
+    <strong>{{ company_settings.company_code or "-" }}</strong>
+    <p class="panel-copy">{{ company_settings.company_name or "Belum diatur" }}</p>
+    <a class="table-link" href="{{ url_for('company_settings_page') }}">Kelola Company Settings</a>
+  </article>
+  <article class="metric-card accent-amber">
+    <span>Letter Categories</span>
+    <strong>{{ letter_category_count }}</strong>
+    <p class="panel-copy">Master kategori dan format nomor surat aktif.</p>
+    <a class="table-link" href="{{ url_for('letter_categories_page') }}">Kelola Kategori Surat</a>
+  </article>
+  <article class="metric-card accent-slate">
+    <span>Password Policy</span>
+    <strong>{{ company_settings.password_min_length or 8 }} / {{ company_settings.password_expiry_days or 90 }}</strong>
+    <p class="panel-copy">Min karakter / hari kedaluwarsa password.</p>
+    <a class="table-link" href="{{ url_for('company_settings_page') }}">Buka Security Policy</a>
+  </article>
+</section>
+
+<section class="panel-card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+          <th>Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in settings_rows %}
+        <tr>
+          <td>{{ row.key }}</td>
+          <td>{{ row.value }}</td>
+          <td>{{ row.updated_at|datetime_label }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3" class="table-empty">Belum ada setting.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

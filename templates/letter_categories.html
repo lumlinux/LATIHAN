@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% set title = "Kategori Surat" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Master Data</span>
+    <h2>Kategori Surat</h2>
+    <p>Kelola jenis surat, format nomor, nomor awal, dan status aktif kategori.</p>
+  </div>
+  <a class="primary-button" href="{{ url_for('letter_category_create') }}">Tambah Kategori</a>
+</section>
+
+<section class="panel-card">
+  <form method="get" class="inline-filter">
+    <input type="text" name="q" value="{{ query_text }}" placeholder="Cari kode atau nama kategori..." />
+    <select name="status">
+      <option value="">Semua status</option>
+      <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Aktif</option>
+      <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Tidak Aktif</option>
+    </select>
+    <button type="submit" class="ghost-button">Filter</button>
+  </form>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Kode</th>
+          <th>Nama</th>
+          <th>Format</th>
+          <th>Nomor Awal</th>
+          <th>Reset</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>{{ row.code }}</td>
+          <td>{{ row.name }}</td>
+          <td><code>{{ row.number_format }}</code></td>
+          <td>{{ row.start_number }}</td>
+          <td>{{ row.reset_policy }}</td>
+          <td>{{ "Aktif" if row.is_active else "Tidak Aktif" }}</td>
+          <td class="table-actions">
+            <a class="table-link" href="{{ url_for('letter_category_edit', category_id=row.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('letter_category_toggle', category_id=row.id) }}">
+              <button type="submit" class="ghost-button">{{ "Nonaktifkan" if row.is_active else "Aktifkan" }}</button>
+            </form>
+            <form method="post" action="{{ url_for('letter_category_delete', category_id=row.id) }}">
+              <button type="submit" class="ghost-button">Hapus</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="table-empty">Belum ada kategori surat.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set title = "Notifications" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Inbox</span>
+    <h2>Notifications</h2>
+    <p>Semua pengingat dan alert sistem yang relevan untuk akun Anda.</p>
+  </div>
+</section>
+
+<section class="panel-card">
+  <div class="list-stack">
+    {% for item in notifications %}
+    <div class="notification-item {% if not item.is_read %}notification-item-unread{% endif %}">
+      <div>
+        <strong>{{ item.title }}</strong>
+        <p>{{ item.message }}</p>
+        <span>{{ item.created_at|datetime_label }}</span>
+      </div>
+      <div class="notification-actions">
+        {% if item.link %}<a class="ghost-button" href="{{ item.link }}">Buka</a>{% endif %}
+        {% if not item.is_read %}
+        <form method="post" action="{{ url_for('mark_notification_read', notification_id=item.id) }}">
+          <button type="submit" class="primary-button">Mark Read</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <p class="empty-state">Belum ada notifikasi.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

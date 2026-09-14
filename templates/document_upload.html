@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Document Upload</span>
+    <h2>{{ title }}</h2>
+    <p>
+      {% if document_row %}
+      Upload versi baru untuk dokumen yang sudah ada tanpa menghilangkan histori file dan resume.
+      {% else %}
+      Pilih file fisik dari perangkat Anda, simpan ke storage aman, lalu buat resume dokumen otomatis bila diperlukan.
+      {% endif %}
+    </p>
+  </div>
+  <a class="ghost-button" href="{{ url_for('document_detail', document_id=document_row.id) if document_row else url_for('module_list', module='documents') }}">Kembali</a>
+</section>
+
+{% if related_context %}
+<section class="panel-card compact-card">
+  <strong>Dokumen akan dikaitkan ke {{ related_context.module|replace('_', ' ')|title }}:</strong>
+  <span>{{ related_context.item_label }}</span>
+</section>
+{% endif %}
+
+{% if document_row %}
+<section class="panel-card">
+  <div class="detail-grid">
+    <div class="detail-item"><span>Document</span><strong>{{ document_row.title }}</strong></div>
+    <div class="detail-item"><span>Organization</span><strong>{{ document_row.organization_name }}</strong></div>
+    <div class="detail-item"><span>Nomor</span><strong>{{ document_row.document_number or "-" }}</strong></div>
+    <div class="detail-item"><span>Versi Aktif</span><strong>{{ document_row.version or "-" }}</strong></div>
+  </div>
+</section>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="panel-card form-grid" id="document-upload-form">
+  {% if related_context %}
+  <input type="hidden" name="related_type" value="{{ related_context.type }}" />
+  <input type="hidden" name="related_id" value="{{ related_context.id }}" />
+  {% endif %}
+
+  {% if not document_row %}
+    {% for field in fields %}
+      {% if field.name != 'file_path' %}
+      <label class="form-field {% if field.type == 'textarea' %}form-field-wide{% endif %}">
+        <span>{{ field.label }}</span>
+        {% set selected_value = form_values.get(field.name, field.value) %}
+        {% if field.type == 'textarea' %}
+        <textarea name="{{ field.name }}" {% if field.required %}required{% endif %}>{{ selected_value }}</textarea>
+        {% elif field.type == 'select' %}
+        <select name="{{ field.name }}" {% if field.required %}required{% endif %}>
+          <option value="">Pilih</option>
+          {% for option in field.options %}
+          <option value="{{ option.value }}" {% if selected_value|string == option.value|string %}selected{% endif %}>{{ option.label }}</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <input type="{{ field.type }}" name="{{ field.name }}" value="{{ selected_value }}" {% if field.required %}required{% endif %} />
+        {% endif %}
+      </label>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+  <label class="form-field form-field-wide">
+    <span>File Dokumen</span>
+    <div class="dropzone" id="dropzone">
+      <strong>Drag & Drop file di sini</strong>
+      <span>atau pilih file dari perangkat Anda</span>
+      <input type="file" name="document_file" id="document_file" required />
+      <small>Format: {{ allowed_extensions }}</small>
+    </div>
+  </label>
+
+  <div class="file-meta form-field-wide" id="file-meta" hidden>
+    <div class="detail-item"><span>File</span><strong id="file-name">-</strong></div>
+    <div class="detail-item"><span>Ukuran</span><strong id="file-size">-</strong></div>
+  </div>
+
+  <label class="form-field">
+    <span>Buat Resume Otomatis</span>
+    <select name="generate_summary">
+      <option value="1" {% if form_values.get('generate_summary', '1') == '1' %}selected{% endif %}>Yes</option>
+      <option value="0" {% if form_values.get('generate_summary') == '0' %}selected{% endif %}>No</option>
+    </select>
+  </label>
+
+  <label class="form-field">
+    <span>Bahasa Resume</span>
+    <select name="summary_language">
+      <option value="id" {% if form_values.get('summary_language', 'id') == 'id' %}selected{% endif %}>Indonesia</option>
+      <option value="en" {% if form_values.get('summary_language') == 'en' %}selected{% endif %}>English</option>
+    </select>
+  </label>
+
+  <label class="form-field">
+    <span>Duplikat</span>
+    <select name="allow_duplicate">
+      <option value="0" {% if form_values.get('allow_duplicate', '0') == '0' %}selected{% endif %}>Blokir file sama</option>
+      <option value="1" {% if form_values.get('allow_duplicate') == '1' %}selected{% endif %}>Upload anyway</option>
+    </select>
+  </label>
+
+  <div class="form-field form-field-wide">
+    <span>Pipeline Proses</span>
+    <div class="status-ladder">
+      <div class="status-step">UPLOADING</div>
+      <div class="status-step">UPLOADED</div>
+      <div class="status-step">EXTRACTING_TEXT</div>
+      <div class="status-step">GENERATING_SUMMARY</div>
+      <div class="status-step">SUMMARY_READY / FAILED</div>
+    </div>
+    <div class="progress-shell" id="upload-progress" hidden>
+      <div class="progress-bar" id="upload-progress-bar"></div>
+    </div>
+    <small>Progress upload akan muncul saat form dikirim, lalu status final dapat dipantau di halaman detail dokumen.</small>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="primary-button">{{ "Upload Version" if document_row else "Upload Document" }}</button>
+    <a class="ghost-button" href="{{ url_for('document_detail', document_id=document_row.id) if document_row else url_for('module_list', module='documents') }}">Cancel</a>
+  </div>
+</form>
+
+<script>
+  const fileInput = document.getElementById("document_file");
+  const dropzone = document.getElementById("dropzone");
+  const meta = document.getElementById("file-meta");
+  const fileName = document.getElementById("file-name");
+  const fileSize = document.getElementById("file-size");
+  const form = document.getElementById("document-upload-form");
+  const progressShell = document.getElementById("upload-progress");
+  const progressBar = document.getElementById("upload-progress-bar");
+
+  function formatSize(bytes) {
+    if (!bytes && bytes !== 0) return "-";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  }
+
+  function updateMeta(file) {
+    if (!file) {
+      meta.hidden = true;
+      return;
+    }
+    meta.hidden = false;
+    fileName.textContent = file.name;
+    fileSize.textContent = formatSize(file.size);
+  }
+
+  fileInput.addEventListener("change", () => updateMeta(fileInput.files[0]));
+  ["dragenter", "dragover"].forEach((eventName) => {
+    dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+  });
+  ["dragleave", "drop"].forEach((eventName) => {
+    dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.remove("dragover");
+    });
+  });
+  dropzone.addEventListener("drop", (event) => {
+    if (event.dataTransfer.files.length) {
+      fileInput.files = event.dataTransfer.files;
+      updateMeta(fileInput.files[0]);
+    }
+  });
+  form.addEventListener("submit", () => {
+    progressShell.hidden = false;
+    progressBar.style.width = "35%";
+    window.setTimeout(() => { progressBar.style.width = "70%"; }, 300);
+  });
+</script>
+{% endblock %}

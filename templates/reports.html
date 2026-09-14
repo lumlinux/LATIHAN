@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% set title = "Reports" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Reporting</span>
+    <h2>Expiry & Compliance Reports</h2>
+    <p>Rekap cepat dokumen, kontrak, permit, dan asset dengan fokus expiry monitoring.</p>
+  </div>
+  <a class="primary-button" href="{{ url_for('reports_export') }}">Export CSV</a>
+</section>
+
+<section class="card-grid card-grid-metrics">
+  <article class="metric-card accent-blue"><span>Documents</span><strong>{{ counts.documents }}</strong></article>
+  <article class="metric-card accent-rose"><span>Contracts</span><strong>{{ counts.contracts }}</strong></article>
+  <article class="metric-card accent-green"><span>Permits</span><strong>{{ counts.permits }}</strong></article>
+  <article class="metric-card accent-purple"><span>Assets</span><strong>{{ counts.assets }}</strong></article>
+  <article class="metric-card accent-amber"><span>Critical</span><strong>{{ counts.critical }}</strong></article>
+  <article class="metric-card accent-slate"><span>Expired</span><strong>{{ counts.expired }}</strong></article>
+</section>
+
+<section class="panel-card">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th>Organization</th>
+          <th>Label</th>
+          <th>Status</th>
+          <th>Expiry Date</th>
+          <th>Urgency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in expiry_rows %}
+        <tr>
+          <td>{{ row.module }}</td>
+          <td>{{ row.organization_name }}</td>
+          <td>{{ row.label }}</td>
+          <td>{{ row.status }}</td>
+          <td>{{ row.expiry_date }}</td>
+          <td>{{ row.urgency }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="table-empty">Belum ada data expiry.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

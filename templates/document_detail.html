@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <div>
+    <span class="eyebrow">Document Detail</span>
+    <h2>{{ document.title }}</h2>
+    <p>Owner {{ document.organization_name }} dengan storage aman, histori versi file, resume, dan audit trail.</p>
+  </div>
+  <div class="topbar-actions">
+    {% if current_file and current_file.extension in ['.pdf', '.jpg', '.jpeg', '.png'] %}
+    <a class="ghost-button" href="{{ url_for('document_file_preview', file_id=current_file.id) }}" target="_blank">Preview</a>
+    {% endif %}
+    {% if current_file %}
+    <a class="ghost-button" href="{{ url_for('document_file_download', file_id=current_file.id) }}">Download</a>
+    {% endif %}
+    {% if can_manage %}
+    <a class="primary-button" href="{{ url_for('document_new_version', document_id=document.id) }}">New Version</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="panel-card">
+  <div class="detail-grid">
+    <div class="detail-item"><span>Organization</span><strong>{{ document.organization_name }}</strong></div>
+    <div class="detail-item"><span>Category</span><strong>{{ document.category }}</strong></div>
+    <div class="detail-item"><span>Document Type</span><strong>{{ document.document_type }}</strong></div>
+    <div class="detail-item"><span>Document Number</span><strong>{{ document.document_number or "-" }}</strong></div>
+    <div class="detail-item"><span>Document Date</span><strong>{{ document.document_date|date_label }}</strong></div>
+    <div class="detail-item"><span>Expiry</span><strong>{{ document.expiry_date|date_label }}</strong></div>
+    <div class="detail-item"><span>Storage</span><strong>{{ current_file.storage_status if current_file else "MISSING" }}</strong></div>
+    <div class="detail-item"><span>Resume Status</span><strong>{{ current_summary.summary_status if current_summary else "BELUM DIBUAT" }}</strong></div>
+    <div class="detail-item"><span>Version</span><strong>{{ current_file.version_number if current_file else "-" }}</strong></div>
+    <div class="detail-item"><span>PIC / Owner</span><strong>{{ document.owner_name or "-" }}</strong></div>
+  </div>
+  {% if current_file and current_file.storage_status == 'MISSING' %}
+  <div class="flash flash-error inline-flash">File tidak ditemukan pada storage aktif maupun path legacy.</div>
+  {% endif %}
+</section>
+
+<section class="card-grid card-grid-panels">
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Original Document</h3>
+    </div>
+    {% if current_file %}
+    <div class="list-stack">
+      <div class="list-item">
+        <strong>{{ current_file.original_filename }}</strong>
+        <span>Version {{ current_file.version_number }} | {{ current_file.mime_type }} | {{ current_file.file_size }} bytes | {{ current_file.storage_provider }}</span>
+      </div>
+      <div class="topbar-actions">
+        {% if current_file.extension in ['.pdf', '.jpg', '.jpeg', '.png'] %}
+        <a class="ghost-button" target="_blank" href="{{ url_for('document_file_preview', file_id=current_file.id) }}">Open Preview</a>
+        {% endif %}
+        <a class="ghost-button" href="{{ url_for('document_file_download', file_id=current_file.id) }}">Download Original</a>
+        {% if current_extraction and current_extraction.extracted_text %}
+        <a class="ghost-button" href="{{ url_for('document_extraction_download', file_id=current_file.id) }}">Download Text</a>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <p class="empty-state">Belum ada file aktif untuk dokumen ini.</p>
+    {% endif %}
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Processing Status</h3>
+      {% if can_manage and current_file %}
+      <form method="post" action="{{ url_for('document_generate_summary', document_id=document.id) }}">
+        <input type="hidden" name="summary_language" value="{{ current_summary.language if current_summary else 'id' }}" />
+        <button type="submit" class="ghost-button">Generate Ulang Resume</button>
+      </form>
+      {% endif %}
+    </div>
+    <div class="list-stack">
+      <div class="list-item">
+        <strong>Storage</strong>
+        <span>{{ current_file.storage_status if current_file else "MISSING" }}</span>
+      </div>
+      <div class="list-item">
+        <strong>Extraction</strong>
+        <span>{{ current_extraction.extraction_status if current_extraction else "PENDING" }}{% if current_extraction and current_extraction.error_message %} | {{ current_extraction.error_message }}{% endif %}</span>
+      </div>
+      <div class="list-item">
+        <strong>Resume</strong>
+        <span>{{ current_summary.summary_status if current_summary else "BELUM DIBUAT" }}{% if current_summary and current_summary.review_notes %} | {{ current_summary.review_notes }}{% endif %}</span>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section class="card-grid card-grid-panels">
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Resume</h3>
+      {% if current_summary and current_summary.summary_text %}
+      <a class="ghost-button" href="{{ url_for('document_summary_download', summary_id=current_summary.id) }}">Download Resume</a>
+      {% endif %}
+    </div>
+    {% if current_summary and current_summary.summary_text %}
+    <pre class="summary-block">{{ current_summary.summary_text }}</pre>
+    <div class="detail-grid">
+      <div class="detail-item"><span>Generated</span><strong>{{ current_summary.generated_at|datetime_label }}</strong></div>
+      <div class="detail-item"><span>Reviewed</span><strong>{{ current_summary.reviewed_at|datetime_label }}</strong></div>
+      <div class="detail-item"><span>Language</span><strong>{{ current_summary.language }}</strong></div>
+      <div class="detail-item"><span>Manual Edit</span><strong>{{ "Yes" if current_summary.manually_edited else "No" }}</strong></div>
+    </div>
+    <div class="list-stack">
+      {% for key, value in current_summary.structured.items() %}
+      <div class="list-item">
+        <strong>{{ key|replace('_', ' ')|title }}</strong>
+        <span>
+          {% if value is iterable and value is not string %}
+            {{ value|join('; ') }}
+          {% else %}
+            {{ value }}
+          {% endif %}
+        </span>
+        {% if current_summary.references.get(key) %}
+        <span>Sumber: {{ current_summary.references.get(key) }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% elif current_summary and current_summary.summary_status == 'FAILED' %}
+    <p class="empty-state">Resume gagal dibuat. {{ current_summary.review_notes or "Silakan coba generate ulang." }}</p>
+    {% else %}
+    <p class="empty-state">Resume belum tersedia untuk dokumen ini.</p>
+    {% endif %}
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head">
+      <h3>Review Resume</h3>
+    </div>
+    {% if can_manage and current_summary %}
+    <form method="post" action="{{ url_for('document_summary_review', summary_id=current_summary.id) }}" class="form-grid">
+      <label class="form-field form-field-wide">
+        <span>Edit Resume</span>
+        <textarea name="summary_text" rows="16">{{ current_summary.summary_text or "" }}</textarea>
+      </label>
+      <label class="form-field form-field-wide">
+        <span>Review Note</span>
+        <textarea name="review_notes" rows="4">{{ current_summary.review_notes or "" }}</textarea>
+      </label>
+      <label class="form-field">
+        <span>Status Review</span>
+        <select name="next_status">
+          {% for item in ["READY_FOR_REVIEW", "REVIEWED", "APPROVED", "REJECTED", "DRAFT"] %}
+          <option value="{{ item }}" {% if current_summary.summary_status == item %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="primary-button">Simpan Review</button>
+      </div>
+    </form>
+    {% else %}
+    <p class="empty-state">Resume akan muncul di sini setelah proses upload dan ekstraksi selesai.</p>
+    {% endif %}
+  </article>
+</section>
+
+<section class="card-grid card-grid-panels">
+  <article class="panel-card">
+    <div class="panel-head"><h3>Version History</h3></div>
+    <div class="list-stack">
+      {% for item in document_files %}
+      <div class="list-item">
+        <strong>Version {{ item.version_number }}{% if item.is_current %} | Current{% endif %}</strong>
+        <span>{{ item.original_filename }} | {{ item.storage_status }} | {{ item.created_at|datetime_label }}</span>
+        <div class="topbar-actions">
+          <a class="table-link" href="{{ url_for('document_file_download', file_id=item.id) }}">Download</a>
+          {% if item.extension in ['.pdf', '.jpg', '.jpeg', '.png'] %}
+          <a class="table-link" target="_blank" href="{{ url_for('document_file_preview', file_id=item.id) }}">Preview</a>
+          {% endif %}
+          {% if can_manage and not item.is_current %}
+          <form method="post" action="{{ url_for('document_restore_version', file_id=item.id) }}">
+            <button type="submit" class="ghost-button">Restore</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada histori versi file.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head"><h3>Summary History</h3></div>
+    <div class="list-stack">
+      {% for item in summary_history %}
+      <div class="list-item">
+        <strong>File v{{ item.version_number }} / Summary rev {{ item.revision_number }}</strong>
+        <span>{{ item.summary_status }} | {{ item.language }} | {{ item.generated_at|datetime_label }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada histori resume.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+
+<section class="card-grid card-grid-panels">
+  <article class="panel-card">
+    <div class="panel-head"><h3>Related Records</h3></div>
+    <div class="list-stack">
+      {% for item in related_items %}
+      <a class="list-item" href="{{ item.url }}">
+        <strong>{{ item.module_label }}</strong>
+        <span>{{ item.item_label }}</span>
+      </a>
+      {% else %}
+      <p class="empty-state">Belum ada modul lain yang dikaitkan dengan dokumen ini.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel-card">
+    <div class="panel-head"><h3>Audit History</h3></div>
+    <div class="list-stack">
+      {% for item in audit_rows %}
+      <div class="list-item">
+        <strong>{{ item.action }}</strong>
+        <span>{{ item.created_at|datetime_label }} | {{ item.user_name or "System" }}</span>
+        <span>{{ item.details }}</span>
+      </div>
+      {% else %}
+      <p class="empty-state">Belum ada audit khusus untuk dokumen ini.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}
