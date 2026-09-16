@@ -15,8 +15,19 @@
         <p>Executive administration hub</p>
       </div>
       <nav class="sidebar-nav">
-        {% for item in nav_items %}
-        <a href="{{ item.url }}" class="nav-link {% if request.path == item.url %}active{% endif %}">{{ item.label }}</a>
+        {% for group in nav_items|groupby('group') %}
+        {% set group_has_active = group.list|selectattr('url', 'equalto', request.path)|list|length > 0 %}
+        <details class="nav-group" {% if group_has_active %}open{% endif %}>
+          <summary class="nav-group-title">
+            <span>{{ group.grouper }}</span>
+            <span class="nav-group-chevron" aria-hidden="true">+</span>
+          </summary>
+          <div class="nav-group-items">
+          {% for item in group.list %}
+          <a href="{{ item.url }}" class="nav-link {% if request.path == item.url %}active{% endif %}">{{ item.label }}</a>
+          {% endfor %}
+          </div>
+        </details>
         {% endfor %}
       </nav>
     </aside>

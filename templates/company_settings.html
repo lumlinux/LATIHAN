@@ -74,6 +74,19 @@
     <input type="file" name="logo_file" accept=".png,.jpg,.jpeg" />
   </div>
 
+  <div class="form-field form-field-wide">
+    <span>Background Kop Surat</span>
+    <small class="muted-mini">Upload PNG/JPG kop surat lengkap. File ini dipakai sebagai latar header saat DOCX dibuat.</small>
+    <div class="list-item">
+      {% if company.letterhead_storage_path %}
+      <strong>Background kop aktif</strong>
+      {% else %}
+      <strong>Belum ada background kop</strong>
+      {% endif %}
+    </div>
+    <input type="file" name="letterhead_file" accept=".png,.jpg,.jpeg" />
+  </div>
+
   <label class="form-field form-field-wide">
     <span>Format Nomor Surat</span>
     <input type="text" name="letter_number_format" value="{{ company.letter_number_format or '{NOMOR}/{KATEGORI}/{KODE_PERUSAHAAN}/{BULAN_ROMAWI}/{TAHUN}' }}" required />

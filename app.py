@@ -167,33 +167,33 @@ DEFAULT_USERS = [
 ]
 
 NAV_ITEMS = [
-    {"label": "Dashboard", "endpoint": "dashboard", "permission": "dashboard.view"},
-    {"label": "AI Secretary", "endpoint": "assistant_page", "permission": "assistant.use"},
-    {"label": "Global Search", "endpoint": "search_page", "permission": "search.global"},
-    {"label": "Agenda", "endpoint": "module_list", "permission": "agenda.view", "module": "agenda"},
-    {"label": "Calendar", "endpoint": "calendar_view", "permission": "calendar.view"},
-    {"label": "Tasks", "endpoint": "module_list", "permission": "tasks.view", "module": "tasks"},
-    {"label": "Reminder", "endpoint": "module_list", "permission": "reminders.view", "module": "reminders"},
-    {"label": "Contacts", "endpoint": "module_list", "permission": "contacts.view", "module": "contacts"},
-    {"label": "Incoming Letters", "endpoint": "module_list", "permission": "incoming_letters.view", "module": "incoming_letters"},
-    {"label": "Outgoing Letters", "endpoint": "module_list", "permission": "outgoing_letters.view", "module": "outgoing_letters"},
-    {"label": "Dispositions", "endpoint": "module_list", "permission": "dispositions.view", "module": "dispositions"},
-    {"label": "Documents", "endpoint": "module_list", "permission": "documents.view", "module": "documents"},
-    {"label": "MOU & Contracts", "endpoint": "module_list", "permission": "contracts.view", "module": "contracts"},
-    {"label": "Permits", "endpoint": "module_list", "permission": "permits.view", "module": "permits"},
-    {"label": "Vendors", "endpoint": "module_list", "permission": "vendors.view", "module": "vendors"},
-    {"label": "Assets", "endpoint": "module_list", "permission": "assets.view", "module": "assets"},
-    {"label": "Meetings", "endpoint": "module_list", "permission": "meetings.view", "module": "meetings"},
-    {"label": "Meeting Minutes", "endpoint": "module_list", "permission": "meeting_minutes.view", "module": "meeting_minutes"},
-    {"label": "Notifications", "endpoint": "notifications_page", "permission": "notifications.view"},
-    {"label": "Compliance", "endpoint": "compliance_page", "permission": "compliance.view"},
-    {"label": "Reports", "endpoint": "reports_page", "permission": "reports.view"},
-    {"label": "Audit Log", "endpoint": "audit_logs_page", "permission": "audit.view"},
-    {"label": "User Management", "endpoint": "users_page", "permission": "users.manage"},
-    {"label": "Letter Categories", "endpoint": "letter_categories_page", "permission": "settings.manage"},
-    {"label": "Company Settings", "endpoint": "company_settings_page", "permission": "settings.manage"},
-    {"label": "Role & Permission", "endpoint": "roles_page", "permission": "roles.manage"},
-    {"label": "Settings", "endpoint": "settings_page", "permission": "settings.manage"},
+    {"label": "Dashboard", "group": "Workspace", "endpoint": "dashboard", "permission": "dashboard.view"},
+    {"label": "AI Secretary", "group": "Workspace", "endpoint": "assistant_page", "permission": "assistant.use"},
+    {"label": "Global Search", "group": "Workspace", "endpoint": "search_page", "permission": "search.global"},
+    {"label": "Agenda", "group": "Planning", "endpoint": "module_list", "permission": "agenda.view", "module": "agenda"},
+    {"label": "Calendar", "group": "Planning", "endpoint": "calendar_view", "permission": "calendar.view"},
+    {"label": "Tasks", "group": "Planning", "endpoint": "module_list", "permission": "tasks.view", "module": "tasks"},
+    {"label": "Reminder", "group": "Planning", "endpoint": "module_list", "permission": "reminders.view", "module": "reminders"},
+    {"label": "Contacts", "group": "Administration", "endpoint": "module_list", "permission": "contacts.view", "module": "contacts"},
+    {"label": "Incoming Letters", "group": "Correspondence", "endpoint": "module_list", "permission": "incoming_letters.view", "module": "incoming_letters"},
+    {"label": "Outgoing Letters", "group": "Correspondence", "endpoint": "module_list", "permission": "outgoing_letters.view", "module": "outgoing_letters"},
+    {"label": "Dispositions", "group": "Correspondence", "endpoint": "module_list", "permission": "dispositions.view", "module": "dispositions"},
+    {"label": "Documents", "group": "Records", "endpoint": "module_list", "permission": "documents.view", "module": "documents"},
+    {"label": "MOU & Contracts", "group": "Records", "endpoint": "module_list", "permission": "contracts.view", "module": "contracts"},
+    {"label": "Permits", "group": "Records", "endpoint": "module_list", "permission": "permits.view", "module": "permits"},
+    {"label": "Vendors", "group": "Records", "endpoint": "module_list", "permission": "vendors.view", "module": "vendors"},
+    {"label": "Assets", "group": "Records", "endpoint": "module_list", "permission": "assets.view", "module": "assets"},
+    {"label": "Meetings", "group": "Meetings", "endpoint": "module_list", "permission": "meetings.view", "module": "meetings"},
+    {"label": "Meeting Minutes", "group": "Meetings", "endpoint": "module_list", "permission": "meeting_minutes.view", "module": "meeting_minutes"},
+    {"label": "Notifications", "group": "Monitoring", "endpoint": "notifications_page", "permission": "notifications.view"},
+    {"label": "Compliance", "group": "Monitoring", "endpoint": "compliance_page", "permission": "compliance.view"},
+    {"label": "Reports", "group": "Monitoring", "endpoint": "reports_page", "permission": "reports.view"},
+    {"label": "Audit Log", "group": "Monitoring", "endpoint": "audit_logs_page", "permission": "audit.view"},
+    {"label": "User Management", "group": "Administration", "endpoint": "users_page", "permission": "users.manage"},
+    {"label": "Letter Categories", "group": "Settings", "endpoint": "letter_categories_page", "permission": "settings.manage"},
+    {"label": "Company Settings", "group": "Settings", "endpoint": "company_settings_page", "permission": "settings.manage"},
+    {"label": "Role & Permission", "group": "Settings", "endpoint": "roles_page", "permission": "roles.manage"},
+    {"label": "Settings", "group": "Settings", "endpoint": "settings_page", "permission": "settings.manage"},
 ]
 
 SCHEMA_SQL = """
@@ -423,6 +423,7 @@ CREATE TABLE IF NOT EXISTS company_settings (
     website TEXT,
     tax_number TEXT,
     logo_storage_path TEXT,
+    letterhead_storage_path TEXT,
     letter_number_format TEXT,
     letter_prefix TEXT,
     date_format TEXT,
@@ -1475,7 +1476,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         company = get_company_settings()
         if request.method == "POST":
             try:
-                if save_company_settings(request.form, request.files.get("logo_file"), company):
+                if save_company_settings(request.form, request.files.get("logo_file"), request.files.get("letterhead_file"), company):
                     flash("Pengaturan perusahaan berhasil diperbarui.", "success")
                     return redirect(url_for("company_settings_page"))
             except DocumentProcessingError as exc:
@@ -2150,6 +2151,7 @@ def migrate_legacy_schema() -> None:
     ensure_column("letters", "central_status TEXT")
     ensure_column("letters", "classification TEXT DEFAULT 'INTERNAL'")
     ensure_column("letters", "updated_by INTEGER")
+    ensure_column("company_settings", "letterhead_storage_path TEXT")
     ensure_column("audit_logs", "ip_address TEXT")
     ensure_column("audit_logs", "before_data TEXT")
     ensure_column("audit_logs", "after_data TEXT")
@@ -2615,16 +2617,54 @@ def build_outgoing_letter_docx(row: dict[str, Any]) -> io.BytesIO:
     normal_style.font.size = Pt(11)
 
     company = get_company_settings()
-    header = document.add_paragraph()
-    header.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    header_run = header.add_run(company.get("company_name") or row.get("organization_name") or "NAMA ORGANISASI")
-    header_run.bold = True
-    header_run.font.size = Pt(14)
-    address = company.get("address")
-    if address:
-        address_run = header.add_run(f"\n{address}")
-        address_run.font.size = Pt(9)
-    document.add_paragraph("_" * 96)
+    letterhead_path = resolve_company_logo_path(company.get("letterhead_storage_path"))
+    use_letterhead = bool(letterhead_path and letterhead_path.exists())
+    if use_letterhead:
+        letterhead = document.add_paragraph()
+        letterhead.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        letterhead.add_run().add_picture(str(letterhead_path), width=Inches(7.0))
+        document.add_paragraph()
+    logo_path = resolve_company_logo_path(company.get("logo_storage_path"))
+    header_table = document.add_table(rows=1, cols=2) if not use_letterhead else None
+    if header_table is not None:
+        header_table.autofit = False
+    if header_table is None:
+        logo_cell = identity_cell = None
+    else:
+        header_table.columns[0].width = Inches(2.25)
+        header_table.columns[1].width = Inches(5.95)
+        logo_cell, identity_cell = header_table.rows[0].cells
+    if header_table is not None and logo_path and logo_path.exists():
+        logo_paragraph = logo_cell.paragraphs[0]
+        logo_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        logo_paragraph.add_run().add_picture(str(logo_path), width=Inches(2.05))
+    elif header_table is not None:
+        logo_cell.text = "BH\nHUSADA\nGROUP"
+        logo_cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    identity = identity_cell.paragraphs[0] if identity_cell is not None else None
+    if identity is not None:
+        identity.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        company_run = identity.add_run(company.get("company_name") or "BHAKTI HUSADA GROUP")
+        company_run.bold = True
+        company_run.font.size = Pt(16)
+        short_name = company.get("short_name") or "Holding (Kantor Pusat)"
+        short_run = identity.add_run(f"\n{short_name}")
+        short_run.bold = True
+        short_run.font.size = Pt(11)
+        address = company.get("address") or "Jl. RE. Martadinata, Karangbaru, Kec. Cikarang Utara, Kabupaten Bekasi, Jawa Barat 17530"
+        contact = " | ".join(value for value in [company.get("phone"), company.get("email"), company.get("website")] if value)
+        details = identity.add_run(f"\n{address}")
+        details.font.size = Pt(8)
+        if contact:
+            details = identity.add_run(f"\n{contact}")
+            details.font.size = Pt(8)
+
+    if not use_letterhead:
+        separator = document.add_paragraph()
+        separator.paragraph_format.space_before = Pt(2)
+        separator.paragraph_format.space_after = Pt(10)
+        separator.add_run("=" * 108).font.size = Pt(8)
 
     metadata = document.add_table(rows=4, cols=2)
     metadata.style = "Table Grid"
@@ -2939,7 +2979,7 @@ def save_letter_category(category_id: int | None, form_data) -> bool:
         return False
 
 
-def save_company_settings(form_data, logo_upload, current_settings: dict[str, Any]) -> bool:
+def save_company_settings(form_data, logo_upload, letterhead_upload, current_settings: dict[str, Any]) -> bool:
     company_name = form_data.get("company_name", "").strip()
     short_name = form_data.get("short_name", "").strip()
     company_code = form_data.get("company_code", "").strip().upper()
@@ -2983,19 +3023,26 @@ def save_company_settings(form_data, logo_upload, current_settings: dict[str, An
             delete_company_logo(logo_storage_path)
         logo_storage_path = saved_logo
 
+    letterhead_storage_path = current_settings.get("letterhead_storage_path")
+    if letterhead_upload and (letterhead_upload.filename or "").strip():
+        saved_letterhead = save_letterhead_background(letterhead_upload)
+        if letterhead_storage_path and letterhead_storage_path != saved_letterhead:
+            delete_company_logo(letterhead_storage_path)
+        letterhead_storage_path = saved_letterhead
+
     before_payload = json.dumps(current_settings, default=str)
     execute(
         """
         UPDATE company_settings
         SET company_name = ?, short_name = ?, company_code = ?, address = ?, city = ?, province = ?, postal_code = ?, phone = ?, email = ?, website = ?, tax_number = ?,
-            logo_storage_path = ?, letter_number_format = ?, letter_prefix = ?, date_format = ?, month_format = ?, active_year = ?, start_number = ?, reset_policy = ?,
+            logo_storage_path = ?, letterhead_storage_path = ?, letter_number_format = ?, letter_prefix = ?, date_format = ?, month_format = ?, active_year = ?, start_number = ?, reset_policy = ?,
             official_signature = ?, official_name = ?, official_position = ?, use_organization_code_in_letters = ?,
             password_min_length = ?, password_require_uppercase = ?, password_require_lowercase = ?, password_require_digit = ?, password_require_special = ?, password_expiry_days = ?, updated_at = ?
         WHERE id = 1
         """,
         (
             company_name, short_name, company_code, address, city, province, postal_code, phone, email, website, tax_number,
-            logo_storage_path, letter_number_format, letter_prefix, date_format, month_format, active_year, start_number, reset_policy,
+            logo_storage_path, letterhead_storage_path, letter_number_format, letter_prefix, date_format, month_format, active_year, start_number, reset_policy,
             official_signature, official_name, official_position, use_org_code,
             min_length, require_upper, require_lower, require_digit, require_special, expiry_days, now_ts(),
         ),
@@ -3018,6 +3065,24 @@ def save_company_logo(upload) -> str:
     branding_root = Path(current_app().config["STORAGE_ROOT"]) / "branding"
     branding_root.mkdir(parents=True, exist_ok=True)
     target = branding_root / f"company-logo{extension}"
+    target.write_bytes(data)
+    return str(Path("branding") / target.name)
+
+
+def save_letterhead_background(upload) -> str:
+    filename = sanitize_filename(upload.filename or "")
+    extension = Path(filename).suffix.lower()
+    if extension not in {".png", ".jpg", ".jpeg"}:
+        raise DocumentProcessingError("Background kop hanya boleh berformat PNG atau JPG.")
+    data = upload.stream.read()
+    if not data:
+        raise DocumentProcessingError("File background kop kosong.")
+    mime_type = sniff_mime_type(filename, data)
+    if mime_type not in {"image/png", "image/jpeg"}:
+        raise DocumentProcessingError("Format background kop tidak valid.")
+    branding_root = Path(current_app().config["STORAGE_ROOT"]) / "branding"
+    branding_root.mkdir(parents=True, exist_ok=True)
+    target = branding_root / f"letterhead-background{extension}"
     target.write_bytes(data)
     return str(Path("branding") / target.name)
 
